@@ -642,7 +642,30 @@ const TRANSLATIONS = {
   }
 };
 
-let currentLang = 'en';
+function detectInitialLanguage(){
+  const requestedLanguage = new URLSearchParams(window.location.search).get('lang');
+  if(requestedLanguage === 'en' || requestedLanguage === 'fr') return requestedLanguage;
+
+  try{
+    const referrer = new URL(document.referrer);
+    const isAxxessWebsite = referrer.hostname === 'axxessintl.com' || referrer.hostname === 'www.axxessintl.com';
+    if(isAxxessWebsite) return /^\/en(?:\/|$)/.test(referrer.pathname) ? 'en' : 'fr';
+  }catch(e){
+    // Direct visits and restrictive referrer policies keep the existing English default.
+  }
+
+  return 'en';
+}
+
+function selectInterfaceLanguage(language){
+  currentLang = language === 'fr' ? 'fr' : 'en';
+  document.documentElement.lang = currentLang === 'fr' ? 'fr-CA' : 'en-CA';
+  document.querySelectorAll('.lang-toggle button').forEach(button=>{
+    button.classList.toggle('active', button.dataset.lang === currentLang);
+  });
+}
+
+let currentLang = detectInitialLanguage();
 let state = { invoiceRef:'', accountNumber:'', importerName:'', importerIRS:'', certName:'', certTitle:'', certPhone:'', certEmail:'', certSig:'', certDate:'', articles:[] };
 const LS_KEY = 'axxess_mca_v1';
 let saveTimer = null;
@@ -1460,14 +1483,14 @@ async function sigToImg(txt){
    WIRE UP
    ================================================================ */
 document.addEventListener('DOMContentLoaded',()=>{
+  selectInterfaceLanguage(currentLang);
   load();
   renderAll();
 
   // language toggle
   document.querySelectorAll('.lang-toggle button').forEach(b=>{
     b.addEventListener('click',()=>{
-      currentLang = b.dataset.lang;
-      document.querySelectorAll('.lang-toggle button').forEach(x=>x.classList.toggle('active', x===b));
+      selectInterfaceLanguage(b.dataset.lang);
       renderAll();
     });
   });
