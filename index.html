@@ -1268,6 +1268,9 @@ async function generatePDF(){
   const doc = new jsPDF({unit:'pt',format:'letter'}); // 612 x 792
   const M = 40; // margin
   const W = 612 - M*2; // content width
+  const HEADER_H = M + 78 + 12; // hauteur reservee par l'en-tete sur chaque page
+  const FOOTER_H = 46;          // hauteur reservee par le pied de page
+  const hdrPages = new Set();   // pages PDF ou l'en-tete a deja ete dessine
   let y = M;
 
   // Load logo as image
@@ -1297,6 +1300,7 @@ async function generatePDF(){
     doc.setDrawColor(217,223,230);
     doc.line(M,y,M+W,y);
     y += 12;
+    hdrPages.add(doc.internal.getCurrentPageInfo().pageNumber);
   }
   function drawFooter(pageNum,pageTotal){
     const fy = 792 - 28;
@@ -1365,20 +1369,25 @@ async function generatePDF(){
     startY: y+4,
     head: [['#','Line ref','HTS / Description','Metals & Exemptions','Country data','Chapter 99 / Rate','Status / Reason']],
     body: tableBody,
-    margin:{left:M,right:M},
+    margin:{left:M,right:M,top:HEADER_H,bottom:FOOTER_H},
+    rowPageBreak:'avoid',
     styles:{fontSize:7.5,cellPadding:4,overflow:'linebreak',valign:'top',textColor:[35,31,32],lineColor:[217,223,230]},
     headStyles:{fillColor:[0,54,99],textColor:255,fontStyle:'bold',fontSize:8},
     alternateRowStyles:{fillColor:[248,250,252]},
     columnStyles:{0:{cellWidth:18},1:{cellWidth:70},2:{cellWidth:100},3:{cellWidth:78},4:{cellWidth:80},5:{cellWidth:68},6:{cellWidth:120}},
-    didDrawPage:(data)=>{
-      drawFooter(doc.internal.getCurrentPageInfo().pageNumber, doc.internal.getNumberOfPages());
-      if(data.pageNumber>1){ drawHeader(); data.cursor.y = y; }
+    willDrawPage:()=>{
+      const p = doc.internal.getCurrentPageInfo().pageNumber;
+      if(!hdrPages.has(p)) drawHeader();
+    },
+    didDrawPage:()=>{
+      const p = doc.internal.getCurrentPageInfo().pageNumber;
+      if(!hdrPages.has(p)) drawHeader();
     }
   });
   y = doc.lastAutoTable.finalY + 18;
 
   // ==== CERTIFICATION BLOCK ====
-  if(y > 680) { doc.addPage(); drawHeader(); }
+  if(y > 530) { doc.addPage(); drawHeader(); }
   doc.setDrawColor(217,223,230);
   doc.setFillColor(255,253,245);
   doc.roundedRect(M, y, W, 150, 6, 6, 'F');
@@ -1421,14 +1430,16 @@ async function generatePDF(){
   y += 50;
 
   // ==== DISCLAIMER ====
-  if(y > 720){ doc.addPage(); drawHeader(); }
+  if(y > 700){ doc.addPage(); drawHeader(); }
   doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(90,100,115);
   const discl = 'The information provided herein by Axxess International Inc. is for informational purposes only and does not constitute legal advice or a binding determination. The importer of record remains solely responsible for the accuracy and completeness of all declarations and for compliance with all applicable laws and regulations. Make sure to use the latest version of this document (v20260730). Temporary rates for Annex I-C and Annex III articles expire January 1, 2028 — see your Axxess broker for details. Reference: CBP CSMS #68253075 & #69252300 (copper smelt & cast, eff. Jul. 30, 2026) | Proclamation 11021 (Apr. 2, 2026).';
   const dl = doc.splitTextToSize(discl, W);
   doc.text(dl, M, y);
 
-  // final footer on last page
-  drawFooter(doc.internal.getNumberOfPages(), doc.internal.getNumberOfPages());
+  // footers: dessines a la toute fin pour que "Page X of Y" ait le vrai total
+  const totalPages = doc.internal.getNumberOfPages();
+  for(let p=1; p<=totalPages; p++){ doc.setPage(p); drawFooter(p, totalPages); }
+  doc.setPage(totalPages);
 
   const fname = 'Metal_Content_Addendum_'+(state.invoiceRef||'draft').replace(/[^\w-]/g,'_')+'.pdf';
   doc.save(fname);
