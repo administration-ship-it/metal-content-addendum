@@ -183,7 +183,7 @@ h3{font-size:15px;margin-bottom:6px;color:var(--axx-blue)}
     </div>
   </div>
   <div class="topbar-right">
-    <span class="version-pill">v20260730</span>
+    <span class="version-pill">v20260928</span>
     <div class="lang-toggle" role="group" aria-label="Language">
       <button type="button" data-lang="en" class="active">EN</button>
       <button type="button" data-lang="fr">FR</button>
@@ -1372,7 +1372,7 @@ async function generatePDF(){
     doc.setTextColor(0,54,99);
     doc.roundedRect(W+M-60, y+6, 60, 16, 8, 8, 'F');
     doc.setFontSize(8); doc.setFont('helvetica','bold');
-    doc.text('v20260730', W+M-30, y+17, {align:'center'});
+    doc.text('v20260928', W+M-30, y+17, {align:'center'});
     y += 78;
     doc.setDrawColor(217,223,230);
     doc.line(M,y,M+W,y);
@@ -1509,7 +1509,7 @@ async function generatePDF(){
   // ==== DISCLAIMER ====
   if(y > 700){ doc.addPage(); drawHeader(); }
   doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(90,100,115);
-  const discl = 'The information provided herein by Axxess International Inc. is for informational purposes only and does not constitute legal advice or a binding determination. The importer of record remains solely responsible for the accuracy and completeness of all declarations and for compliance with all applicable laws and regulations. Make sure to use the latest version of this document (v20260730). Temporary rates for Annex I-C and Annex III articles expire January 1, 2028 — see your Axxess broker for details. Reference: CBP CSMS #68253075 & #69252300 (copper smelt & cast, eff. Jul. 30, 2026) | Proclamation 11021 (Apr. 2, 2026).';
+  const discl = 'The information provided herein by Axxess International Inc. is for informational purposes only and does not constitute legal advice or a binding determination. The importer of record remains solely responsible for the accuracy and completeness of all declarations and for compliance with all applicable laws and regulations. Make sure to use the latest version of this document (v20260928). Temporary rates for Annex I-C and Annex III articles expire January 1, 2028 — see your Axxess broker for details. Reference: CBP CSMS #68253075 & #69252300 (copper smelt & cast, eff. Jul. 30, 2026) | Proclamation 11021 (Apr. 2, 2026).';
   const dl = doc.splitTextToSize(discl, W);
   doc.text(dl, M, y);
 
@@ -1644,3 +1644,4 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 </body>
 </html>
+
